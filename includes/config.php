@@ -15,7 +15,7 @@ define('BASE_PATH', dirname(dirname(__FILE__)));
 define('UPLOAD_PATH', BASE_PATH . '/uploads');
 
 // Configuración de Firebase Admin
-define('FIREBASE_API_KEY', 'AIzaSyCPUsXqvdtbU8lGhcH'); // Reemplazar con tu API Key
+define('FIREBASE_API_KEY', 'AIzaSyCPUsXqvdtbU8lGhcH-qD86d7bZHrkaaao'); // API Key completa
 
 // Configuración de correo electrónico (EmailJS)
 define('EMAILJS_USER_ID', 'tu_user_id_emailjs'); // Reemplazar con tu User ID de EmailJS
