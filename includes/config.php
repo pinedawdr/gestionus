@@ -5,17 +5,17 @@ define('APP_VERSION', '1.0.0');
 
 // Configuración de la base de datos
 define('DB_HOST', 'localhost');
-define('DB_USER', 'tu_usuario_db'); // Reemplazar con tu usuario de base de datos
-define('DB_PASS', 'tu_contraseña_db'); // Reemplazar con tu contraseña de base de datos
+define('DB_USER', 'root'); // Reemplazar con tu usuario de base de datos
+define('DB_PASS', ''); // Reemplazar con tu contraseña de base de datos
 define('DB_NAME', 'gestionus'); // Reemplazar con el nombre de tu base de datos
 
 // Configuración de rutas
-define('BASE_URL', 'https://gestionus.tudominio.com/'); // Reemplazar con tu dominio
+define('BASE_URL', 'http://localhost:8888/gestionus/'); // Reemplazar con tu dominio
 define('BASE_PATH', dirname(dirname(__FILE__)));
 define('UPLOAD_PATH', BASE_PATH . '/uploads');
 
 // Configuración de Firebase Admin
-define('FIREBASE_API_KEY', 'tu_api_key'); // Reemplazar con tu API Key
+define('FIREBASE_API_KEY', 'AIzaSyCPUsXqvdtbU8lGhcH'); // Reemplazar con tu API Key
 
 // Configuración de correo electrónico (EmailJS)
 define('EMAILJS_USER_ID', 'tu_user_id_emailjs'); // Reemplazar con tu User ID de EmailJS

@@ -16,6 +16,8 @@ function sanitize($input) {
 
 // Función para validar token JWT de Firebase
 function validateFirebaseToken($token) {
+    error_log("Validando token de Firebase...");
+    
     $curl = curl_init();
     
     curl_setopt_array($curl, [
@@ -33,20 +35,27 @@ function validateFirebaseToken($token) {
     ]);
     
     $response = curl_exec($curl);
+    $info = curl_getinfo($curl);
     $err = curl_error($curl);
+    
+    error_log("Respuesta de Firebase: código " . $info['http_code']);
+    error_log("Respuesta body: " . substr($response, 0, 200) . "...");
     
     curl_close($curl);
     
     if ($err) {
+        error_log("Error CURL: " . $err);
         return false;
     }
     
     $data = json_decode($response, true);
     
     if (isset($data['users']) && !empty($data['users'])) {
+        error_log("Usuario de Firebase encontrado");
         return $data['users'][0];
     }
     
+    error_log("Usuario de Firebase no encontrado: " . print_r($data, true));
     return false;
 }
 
