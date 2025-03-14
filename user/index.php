@@ -77,9 +77,41 @@ foreach ($recentDocuments as &$doc) {
     $doc['created_at_formatted'] = formatDate($doc['created_at']);
 }
 
+// Verificar restricciones horarias para cada tipo de documento
+$dayOfWeek = date('N'); // 1 (lunes) a 7 (domingo)
+$currentHour = (int)date('G'); // 0-23 formato 24h
+
+// Inicializar variables de estado para cada tipo
+$canUploadCNV = false;
+$canUploadBackup = false;
+$canUploadEvidencia = false;
+
+// CNV: Solo martes de 00:00 hasta 12:00
+if ($dayOfWeek == 2 && $currentHour < 12) {
+    $canUploadCNV = true;
+}
+
+// Backups y Evidencias: Solo viernes de 00:00 hasta 18:00
+if ($dayOfWeek == 5 && $currentHour < 18) {
+    $canUploadBackup = true;
+    $canUploadEvidencia = true;
+}
+
 // Set page title for the header
 $pageTitle = "Dashboard de Usuario";
 $userRole = "user";
+
+// Mensaje de error para el formulario de subida
+$uploadError = '';
+$uploadSuccess = '';
+
+// Procesar si hay un mensaje de éxito o error en la URL
+if (isset($_GET['success']) && $_GET['success'] == 1) {
+    $uploadSuccess = 'Documento subido correctamente';
+}
+if (isset($_GET['error'])) {
+    $uploadError = urldecode($_GET['error']);
+}
 ?>
 
 <?php include_once '../includes/header.php'; ?>
@@ -105,13 +137,13 @@ $userRole = "user";
                                 <?php 
                                 switch ($type) {
                                     case 'backup':
-                                        echo 'Backup de seguridad (viernes)';
+                                        echo 'Backup de seguridad (viernes hasta las 18:00)';
                                         break;
                                     case 'evidencia':
-                                        echo 'Evidencias de envío (viernes)';
+                                        echo 'Evidencias de envío (viernes hasta las 18:00)';
                                         break;
                                     case 'reporte_cnv':
-                                        echo 'Reporte CNV (martes)';
+                                        echo 'Reporte CNV (martes hasta las 12:00)';
                                         break;
                                 }
                                 ?>
@@ -119,6 +151,37 @@ $userRole = "user";
                             <?php endforeach; ?>
                         </ul>
                     </p>
+                </div>
+            </div>
+        </div>
+        <?php endif; ?>
+
+        <!-- Mensajes de éxito o error -->
+        <?php if (!empty($uploadSuccess)): ?>
+        <div class="bg-green-50 border-l-4 border-green-400 p-4 mb-4">
+            <div class="flex">
+                <div class="flex-shrink-0">
+                    <svg class="h-5 w-5 text-green-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                    </svg>
+                </div>
+                <div class="ml-3">
+                    <p class="text-sm text-green-700"><?php echo $uploadSuccess; ?></p>
+                </div>
+            </div>
+        </div>
+        <?php endif; ?>
+        
+        <?php if (!empty($uploadError)): ?>
+        <div class="bg-red-50 border-l-4 border-red-400 p-4 mb-4">
+            <div class="flex">
+                <div class="flex-shrink-0">
+                    <svg class="h-5 w-5 text-red-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                    </svg>
+                </div>
+                <div class="ml-3">
+                    <p class="text-sm text-red-700"><?php echo $uploadError; ?></p>
                 </div>
             </div>
         </div>
@@ -164,8 +227,8 @@ $userRole = "user";
         <div class="bg-white shadow rounded-lg mb-6">
             <div class="px-4 py-5 sm:p-6">
                 <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">Documentos por Tipo</h3>
-                <div>
-                    <canvas id="docsChart" height="200"></canvas>
+                <div class="max-w-md mx-auto">
+                    <canvas id="docsChart" height="150"></canvas>
                 </div>
             </div>
         </div>
@@ -174,34 +237,116 @@ $userRole = "user";
         <div class="bg-white shadow rounded-lg mb-6">
             <div class="px-4 py-5 sm:p-6">
                 <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">Subir Documento</h3>
-                <form id="uploadForm" class="space-y-4">
+                
+                <!-- Restricciones horarias -->
+                <div class="mb-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="p-3 rounded-lg <?php echo $canUploadCNV ? 'bg-green-50 text-green-800' : 'bg-red-50 text-red-800'; ?>">
+                        <span class="font-semibold">Reportes CNV:</span> 
+                        <?php echo $canUploadCNV ? 'Disponible ahora' : 'Solo martes de 00:00 a 12:00'; ?>
+                    </div>
+                    <div class="p-3 rounded-lg <?php echo $canUploadBackup ? 'bg-green-50 text-green-800' : 'bg-red-50 text-red-800'; ?>">
+                        <span class="font-semibold">Backups:</span> 
+                        <?php echo $canUploadBackup ? 'Disponible ahora' : 'Solo viernes de 00:00 a 18:00'; ?>
+                    </div>
+                    <div class="p-3 rounded-lg <?php echo $canUploadEvidencia ? 'bg-green-50 text-green-800' : 'bg-red-50 text-red-800'; ?>">
+                        <span class="font-semibold">Evidencias:</span> 
+                        <?php echo $canUploadEvidencia ? 'Disponible ahora' : 'Solo viernes de 00:00 a 18:00'; ?>
+                    </div>
+                </div>
+                
+                <form id="uploadForm" action="../api/upload.php" method="POST" enctype="multipart/form-data" class="space-y-4">
                     <div>
                         <label for="docType" class="block text-sm font-medium text-gray-700">Tipo de Documento</label>
-                        <select id="docType" name="type" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md">
-                            <option value="backup">Backup de Seguridad</option>
-                            <option value="evidencia">Evidencia de Envío</option>
-                            <option value="reporte_cnv">Reporte CNV</option>
+                        <select id="docType" name="type" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 bg-blue-50 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
+                            <option value="backup" <?php echo !$canUploadBackup ? 'disabled' : ''; ?>>Backup de Seguridad</option>
+                            <option value="evidencia" <?php echo !$canUploadEvidencia ? 'disabled' : ''; ?>>Evidencia de Envío</option>
+                            <option value="reporte_cnv" <?php echo !$canUploadCNV ? 'disabled' : ''; ?>>Reporte CNV</option>
                             <option value="otro">Otro</option>
                         </select>
                     </div>
-                    <div>
-                        <label for="docFile" class="block text-sm font-medium text-gray-700">Archivo</label>
-                        <div class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md">
-                            <div class="space-y-1 text-center">
-                                <svg class="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48" aria-hidden="true">
-                                    <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                                </svg>
-                                <div class="flex text-sm text-gray-600">
-                                    <label for="file-upload" class="relative cursor-pointer bg-white rounded-md font-medium text-blue-600 hover:text-blue-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-blue-500">
-                                        <span>Seleccionar archivo</span>
-                                        <input id="file-upload" name="file" type="file" class="sr-only">
-                                    </label>
-                                    <p class="pl-1">o arrastrar y soltar</p>
+                    
+                    <!-- Contenedor para archivos únicos (backup, reporte_cnv, otro) -->
+                    <div id="single-file-container" class="space-y-4">
+                        <div>
+                            <label for="file-upload" class="block text-sm font-medium text-gray-700">Archivo</label>
+                            <div class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md">
+                                <div class="space-y-1 text-center">
+                                    <svg class="mx-auto h-12 w-12 text-indigo-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                    </svg>
+                                    <div class="flex text-sm text-gray-600 justify-center">
+                                        <label for="file-upload" class="relative cursor-pointer bg-white rounded-md font-medium text-blue-600 hover:text-blue-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-blue-500">
+                                            <span>Seleccionar archivo</span>
+                                            <input id="file-upload" name="file" type="file" class="sr-only">
+                                        </label>
+                                    </div>
+                                    <p class="text-xs text-gray-500" id="file-type-hint">
+                                        Archivos permitidos según tipo de documento
+                                    </p>
                                 </div>
-                                <p class="text-xs text-gray-500">PDF, DOCX, XLSX, ZIP hasta 10MB</p>
                             </div>
                         </div>
                     </div>
+                    
+                    <!-- Contenedor para múltiples archivos de evidencia -->
+                    <div id="evidencia-container" class="space-y-4 hidden">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Archivos de Evidencia (Máximo 3)</label>
+                            <div class="mt-1 space-y-2">
+                                <div class="flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md">
+                                    <div class="space-y-1 text-center">
+                                        <svg class="mx-auto h-8 w-8 text-indigo-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                        </svg>
+                                        <div class="flex text-sm text-gray-600 justify-center">
+                                            <label for="evidencia-file-1" class="relative cursor-pointer bg-white rounded-md font-medium text-blue-600 hover:text-blue-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-blue-500">
+                                                <span>Archivo 1</span>
+                                                <input id="evidencia-file-1" name="evidencia_files[]" type="file" accept="image/*" class="sr-only evidencia-file">
+                                            </label>
+                                        </div>
+                                        <p class="text-xs text-gray-500 file-name-1">No seleccionado</p>
+                                    </div>
+                                </div>
+                                
+                                <div class="flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md">
+                                    <div class="space-y-1 text-center">
+                                        <svg class="mx-auto h-8 w-8 text-indigo-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                        </svg>
+                                        <div class="flex text-sm text-gray-600 justify-center">
+                                            <label for="evidencia-file-2" class="relative cursor-pointer bg-white rounded-md font-medium text-blue-600 hover:text-blue-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-blue-500">
+                                                <span>Archivo 2 (opcional)</span>
+                                                <input id="evidencia-file-2" name="evidencia_files[]" type="file" accept="image/*" class="sr-only evidencia-file">
+                                            </label>
+                                        </div>
+                                        <p class="text-xs text-gray-500 file-name-2">No seleccionado</p>
+                                    </div>
+                                </div>
+                                
+                                <div class="flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md">
+                                    <div class="space-y-1 text-center">
+                                        <svg class="mx-auto h-8 w-8 text-indigo-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                        </svg>
+                                        <div class="flex text-sm text-gray-600 justify-center">
+                                            <label for="evidencia-file-3" class="relative cursor-pointer bg-white rounded-md font-medium text-blue-600 hover:text-blue-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-blue-500">
+                                                <span>Archivo 3 (opcional)</span>
+                                                <input id="evidencia-file-3" name="evidencia_files[]" type="file" accept="image/*" class="sr-only evidencia-file">
+                                            </label>
+                                        </div>
+                                        <p class="text-xs text-gray-500 file-name-3">No seleccionado</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Campo de descripción para "otros" -->
+                    <div id="description-container" class="hidden">
+                        <label for="description" class="block text-sm font-medium text-gray-700">Descripción</label>
+                        <textarea id="description" name="description" rows="3" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" placeholder="Describe el propósito o contenido de este documento..."></textarea>
+                    </div>
+                    
                     <div>
                         <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
                             Subir Documento
@@ -264,6 +409,9 @@ $userRole = "user";
                                         </div>
                                         <div class="ml-4">
                                             <div class="text-sm font-medium text-gray-900 truncate max-w-xs"><?php echo htmlspecialchars($doc['original_name']); ?></div>
+                                            <?php if (!empty($doc['description'])): ?>
+                                            <div class="text-xs text-gray-500 truncate max-w-xs"><?php echo htmlspecialchars($doc['description']); ?></div>
+                                            <?php endif; ?>
                                         </div>
                                     </div>
                                 </td>
@@ -306,7 +454,7 @@ $userRole = "user";
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                     <a href="<?php echo $doc['secure_url']; ?>" target="_blank" class="text-blue-600 hover:text-blue-900 mr-3">Ver</a>
-                                    <a href="<?php echo $doc['secure_url']; ?>" download class="text-green-600 hover:text-green-900">Descargar</a>
+                                    <a href="<?php echo $doc['secure_url']; ?>&download=1" class="text-green-600 hover:text-green-900">Descargar</a>
                                 </td>
                             </tr>
                             <?php endforeach; ?>
@@ -328,6 +476,7 @@ $userRole = "user";
 
 <?php include_once '../includes/footer.php'; ?>
 
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.0/dist/chart.min.js"></script>
 <script>
 // Gráfico de documentos
 document.addEventListener('DOMContentLoaded', function() {
@@ -368,32 +517,150 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
     
-    // Manejo de subida de archivos
+    // Manejo del tipo de documento seleccionado
+    const docTypeSelect = document.getElementById('docType');
+    const singleFileContainer = document.getElementById('single-file-container');
+    const evidenciaContainer = document.getElementById('evidencia-container');
+    const descriptionContainer = document.getElementById('description-container');
+    const fileTypeHint = document.getElementById('file-type-hint');
+    const fileUpload = document.getElementById('file-upload');
+    
+    // Función para actualizar la interfaz según el tipo de documento
+    function updateFormByDocType() {
+        const selectedType = docTypeSelect.value;
+        
+        // Resetear el formulario
+        singleFileContainer.classList.remove('hidden');
+        evidenciaContainer.classList.add('hidden');
+        descriptionContainer.classList.add('hidden');
+        
+        // Configurar según el tipo seleccionado
+        switch(selectedType) {
+            case 'backup':
+                fileTypeHint.textContent = 'Solo archivos ZIP o RAR hasta 10MB';
+                fileUpload.setAttribute('accept', '.zip,.rar');
+                break;
+            case 'evidencia':
+                singleFileContainer.classList.add('hidden');
+                evidenciaContainer.classList.remove('hidden');
+                break;
+            case 'reporte_cnv':
+                fileTypeHint.textContent = 'Archivos PDF, DOC, DOCX, XLS, XLSX hasta 10MB';
+                fileUpload.setAttribute('accept', '.pdf,.doc,.docx,.xls,.xlsx');
+                break;
+            case 'otro':
+                fileTypeHint.textContent = 'Cualquier tipo de archivo hasta 10MB';
+                fileUpload.removeAttribute('accept');
+                descriptionContainer.classList.remove('hidden');
+                break;
+        }
+    }
+    
+    // Eventos para los archivos de evidencia
+    const evidenciaFiles = document.querySelectorAll('.evidencia-file');
+    evidenciaFiles.forEach((input, index) => {
+        input.addEventListener('change', function() {
+            const fileNameDisplay = document.querySelector(`.file-name-${index + 1}`);
+            if (this.files.length > 0) {
+                fileNameDisplay.textContent = this.files[0].name;
+            } else {
+                fileNameDisplay.textContent = 'No seleccionado';
+            }
+        });
+    });
+    
+    // Mostrar el nombre del archivo seleccionado
+    fileUpload.addEventListener('change', function() {
+        if (this.files.length > 0) {
+            fileTypeHint.textContent = `Archivo seleccionado: ${this.files[0].name}`;
+        } else {
+            updateFormByDocType(); // Restaurar el mensaje original
+        }
+    });
+    
+    // Evento al cambiar tipo de documento
+    docTypeSelect.addEventListener('change', updateFormByDocType);
+    
+    // Inicializar el formulario según el tipo de documento seleccionado
+    updateFormByDocType();
+    
+    // Validación del formulario
     const uploadForm = document.getElementById('uploadForm');
-    const fileInput = document.getElementById('file-upload');
     const uploadStatus = document.getElementById('uploadStatus');
     const uploadProgress = document.getElementById('uploadProgress');
     
     uploadForm.addEventListener('submit', function(e) {
         e.preventDefault();
         
-        const file = fileInput.files[0];
-        if (!file) {
-            alert('Por favor selecciona un archivo');
+        const selectedType = docTypeSelect.value;
+        let isValid = true;
+        let errorMessage = '';
+        
+        // Validar según el tipo de documento
+        if (selectedType === 'evidencia') {
+            // Para evidencias, verificar que al menos una imagen esté seleccionada
+            const hasFile = Array.from(evidenciaFiles).some(input => input.files.length > 0);
+            if (!hasFile) {
+                isValid = false;
+                errorMessage = 'Debes seleccionar al menos una imagen para la evidencia';
+            } else {
+                // Verificar que sean imágenes
+                const invalidFile = Array.from(evidenciaFiles)
+                    .filter(input => input.files.length > 0)
+                    .find(input => !input.files[0].type.startsWith('image/'));
+                
+                if (invalidFile) {
+                    isValid = false;
+                    errorMessage = 'Solo se permiten archivos de imagen para evidencias';
+                }
+            }
+        } else {
+            // Para los demás tipos, verificar que hay un archivo
+            if (fileUpload.files.length === 0) {
+                isValid = false;
+                errorMessage = 'Debes seleccionar un archivo';
+            } else {
+                // Verificar restricciones específicas por tipo
+                if (selectedType === 'backup') {
+                    const fileName = fileUpload.files[0].name.toLowerCase();
+                    if (!fileName.endsWith('.zip') && !fileName.endsWith('.rar')) {
+                        isValid = false;
+                        errorMessage = 'Para backups solo se permiten archivos ZIP o RAR';
+                    }
+                }
+                
+                // Verificar tamaño máximo (10MB)
+                if (fileUpload.files[0].size > 10 * 1024 * 1024) {
+                    isValid = false;
+                    errorMessage = 'El archivo es demasiado grande. El tamaño máximo es 10MB.';
+                }
+            }
+            
+            // Verificar descripción para 'otro'
+            if (selectedType === 'otro' && document.getElementById('description').value.trim() === '') {
+                isValid = false;
+                errorMessage = 'Debes proporcionar una descripción para este tipo de documento';
+            }
+        }
+        
+        // Validar restricciones horarias
+        if (selectedType === 'reporte_cnv' && !<?php echo $canUploadCNV ? 'true' : 'false'; ?>) {
+            isValid = false;
+            errorMessage = 'Los reportes CNV solo pueden subirse los martes de 00:00 a 12:00';
+        } else if ((selectedType === 'backup' || selectedType === 'evidencia') && !<?php echo $canUploadBackup ? 'true' : 'false'; ?>) {
+            isValid = false;
+            errorMessage = 'Los backups y evidencias solo pueden subirse los viernes de 00:00 a 18:00';
+        }
+        
+        if (!isValid) {
+            alert(errorMessage);
             return;
         }
         
-        // Verificar tamaño máximo (10MB)
-        if (file.size > 10 * 1024 * 1024) {
-            alert('El archivo es demasiado grande. El tamaño máximo es 10MB.');
-            return;
-        }
-        
-        const formData = new FormData();
-        formData.append('file', file);
-        formData.append('type', document.getElementById('docType').value);
-        
+        // Proceder con la subida
         uploadStatus.classList.remove('hidden');
+        
+        const formData = new FormData(this);
         
         const xhr = new XMLHttpRequest();
         xhr.open('POST', '../api/upload.php', true);
@@ -410,25 +677,20 @@ document.addEventListener('DOMContentLoaded', function() {
                 try {
                     const response = JSON.parse(xhr.responseText);
                     if (response.success) {
-                        alert('Documento subido correctamente');
-                        window.location.reload();
+                        window.location.href = 'index.php?success=1';
                     } else {
-                        alert('Error: ' + response.message);
-                        uploadStatus.classList.add('hidden');
+                        window.location.href = 'index.php?error=' + encodeURIComponent(response.message || 'Error al subir el documento');
                     }
                 } catch (e) {
-                    alert('Error al procesar la respuesta del servidor');
-                    uploadStatus.classList.add('hidden');
+                    window.location.href = 'index.php?error=' + encodeURIComponent('Error al procesar la respuesta del servidor');
                 }
             } else {
-                alert('Error al subir el documento');
-                uploadStatus.classList.add('hidden');
+                window.location.href = 'index.php?error=' + encodeURIComponent('Error al subir el documento: ' + xhr.status);
             }
         };
         
         xhr.onerror = function() {
-            alert('Error de red al intentar subir el documento');
-            uploadStatus.classList.add('hidden');
+            window.location.href = 'index.php?error=' + encodeURIComponent('Error de red al intentar subir el documento');
         };
         
         xhr.send(formData);
