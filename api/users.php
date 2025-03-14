@@ -4,6 +4,11 @@ require_once '../includes/config.php';
 require_once '../includes/db.php';
 require_once '../includes/functions.php';
 
+// Configuración de registros
+ini_set('log_errors', 1);
+ini_set('error_log', '../logs/api_users_errors.log');
+error_log("Inicio de acceso a API users - " . date('Y-m-d H:i:s'));
+
 // Verificar si es acción de verificación de rol (para login)
 $action = $_REQUEST['action'] ?? '';
 if ($action !== 'check_role') {
@@ -14,34 +19,42 @@ if ($action !== 'check_role') {
 // Manejar diferentes acciones
 switch ($action) {
     case 'check_role':
+        // Configurar encabezado de contenido
+        header('Content-Type: application/json');
+
         // Verificar rol del usuario para proceso de login
         $headers = getallheaders();
         if (!isset($headers['Authorization'])) {
-            header('HTTP/1.0 401 Unauthorized');
+            error_log("No se encontró el header Authorization en check_role");
             echo json_encode(['success' => false, 'message' => 'No autorizado']);
             exit;
         }
         
         $token = str_replace('Bearer ', '', $headers['Authorization']);
+        error_log("Token en check_role: " . substr($token, 0, 20) . "...");
+        
         $userData = validateFirebaseToken($token);
         
         if (!$userData) {
-            header('HTTP/1.0 401 Unauthorized');
+            error_log("Token de Firebase inválido en check_role");
             echo json_encode(['success' => false, 'message' => 'Token inválido']);
             exit;
         }
         
         $email = $userData['email'];
+        error_log("Email obtenido de token: " . $email);
         
         $db = Database::getInstance();
         $sql = "SELECT role FROM users WHERE email = ? LIMIT 1";
         $user = $db->fetchOne($sql, [$email]);
         
         if (!$user) {
+            error_log("Usuario no encontrado en la BD para: " . $email);
             echo json_encode(['success' => false, 'message' => 'Usuario no encontrado']);
             exit;
         }
         
+        error_log("Rol encontrado: " . $user['role']);
         echo json_encode(['success' => true, 'role' => $user['role']]);
         break;
         
@@ -63,6 +76,7 @@ switch ($action) {
             
             echo json_encode(['success' => true, 'users' => $users]);
         } catch (Exception $e) {
+            error_log("Error al listar usuarios: " . $e->getMessage());
             echo json_encode(['success' => false, 'message' => 'Error al obtener usuarios: ' . $e->getMessage()]);
         }
         break;
@@ -135,6 +149,7 @@ switch ($action) {
         curl_close($curl);
         
         if ($err) {
+            error_log("Error al crear usuario en Firebase: " . $err);
             echo json_encode(['success' => false, 'message' => 'Error al crear usuario en Firebase: ' . $err]);
             exit;
         }
@@ -142,6 +157,7 @@ switch ($action) {
         $firebaseData = json_decode($response, true);
         
         if (isset($firebaseData['error'])) {
+            error_log("Error en Firebase al crear usuario: " . print_r($firebaseData['error'], true));
             echo json_encode(['success' => false, 'message' => 'Error en Firebase: ' . $firebaseData['error']['message']]);
             exit;
         }
@@ -171,6 +187,7 @@ switch ($action) {
             
             echo json_encode(['success' => true, 'message' => 'Usuario creado correctamente', 'user_id' => $userId]);
         } catch (Exception $e) {
+            error_log("Error al guardar usuario en BD: " . $e->getMessage());
             echo json_encode(['success' => false, 'message' => 'Error al guardar usuario: ' . $e->getMessage()]);
         }
         break;
@@ -228,6 +245,7 @@ switch ($action) {
             $db->execute($sql, $params);
             echo json_encode(['success' => true, 'message' => 'Usuario actualizado correctamente']);
         } catch (Exception $e) {
+            error_log("Error al actualizar usuario: " . $e->getMessage());
             echo json_encode(['success' => false, 'message' => 'Error al actualizar usuario: ' . $e->getMessage()]);
         }
         break;
@@ -290,6 +308,7 @@ switch ($action) {
         curl_close($curl);
         
         if ($err) {
+            error_log("Error al cambiar contraseña en Firebase: " . $err);
             echo json_encode(['success' => false, 'message' => 'Error al cambiar contraseña: ' . $err]);
             exit;
         }
@@ -297,6 +316,7 @@ switch ($action) {
         $firebaseData = json_decode($response, true);
         
         if (isset($firebaseData['error'])) {
+            error_log("Error en Firebase al cambiar contraseña: " . print_r($firebaseData['error'], true));
             echo json_encode(['success' => false, 'message' => 'Error en Firebase: ' . $firebaseData['error']['message']]);
             exit;
         }
@@ -336,7 +356,7 @@ switch ($action) {
             exit;
         }
         
-        // Eliminar usuario en Firebase (requiere token de admin)
+        // Eliminar usuario en Firebase (requiere Firebase Admin SDK o un token especial)
         // Esta funcionalidad requiere Firebase Admin SDK o un token especial
         // Por simplicidad, solo desactivamos el usuario en nuestra base de datos
         
@@ -346,6 +366,7 @@ switch ($action) {
             $db->execute($sql, [$userId]);
             echo json_encode(['success' => true, 'message' => 'Usuario desactivado correctamente']);
         } catch (Exception $e) {
+            error_log("Error al desactivar usuario: " . $e->getMessage());
             echo json_encode(['success' => false, 'message' => 'Error al desactivar usuario: ' . $e->getMessage()]);
         }
         break;

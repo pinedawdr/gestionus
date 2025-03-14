@@ -18,6 +18,12 @@ function sanitize($input) {
 function validateFirebaseToken($token) {
     error_log("Validando token de Firebase...");
     
+    // Verificar que el token no esté vacío
+    if (empty($token)) {
+        error_log("Token vacío");
+        return false;
+    }
+    
     $curl = curl_init();
     
     curl_setopt_array($curl, [
@@ -39,7 +45,11 @@ function validateFirebaseToken($token) {
     $err = curl_error($curl);
     
     error_log("Respuesta de Firebase: código " . $info['http_code']);
-    error_log("Respuesta body: " . substr($response, 0, 200) . "...");
+    if ($response) {
+        error_log("Respuesta body: " . substr($response, 0, 200) . "...");
+    } else {
+        error_log("No hay respuesta de Firebase");
+    }
     
     curl_close($curl);
     

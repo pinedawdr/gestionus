@@ -6,11 +6,11 @@ define('APP_VERSION', '1.0.0');
 // Configuración de la base de datos
 define('DB_HOST', 'localhost');
 define('DB_USER', 'root'); // Reemplazar con tu usuario de base de datos
-define('DB_PASS', ''); // Reemplazar con tu contraseña de base de datos
+define('DB_PASS', 'root'); // Reemplazar con tu contraseña de base de datos
 define('DB_NAME', 'gestionus'); // Reemplazar con el nombre de tu base de datos
 
 // Configuración de rutas
-define('BASE_URL', 'http://localhost:8888/gestionus/'); // Reemplazar con tu dominio
+define('BASE_URL', 'http://localhost:8888/gestionus/admin/settings.php'); // Reemplazar con tu dominio
 define('BASE_PATH', dirname(dirname(__FILE__)));
 define('UPLOAD_PATH', BASE_PATH . '/uploads');
 
