@@ -319,7 +319,7 @@ include_once '../includes/header.php';
         <footer class="bg-white">
             <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
                 <p class="text-center text-sm text-gray-500">
-                    &copy; <?php echo date('Y'); ?> GestiónUS - Todos los derechos reservados
+                    &copy; <?php echo date('Y'); ?> Gestionus - Todos los derechos reservados
                 </p>
             </div>
         </footer>
@@ -440,7 +440,7 @@ include_once '../includes/header.php';
                     body: JSON.stringify({
                         email: email,
                         subject: 'Prueba de Configuración de Correo',
-                        message: 'Este es un correo de prueba enviado desde el sistema GestiónUS para verificar la configuración de EmailJS.'
+                        message: 'Este es un correo de prueba enviado desde el sistema Gestionus para verificar la configuración de EmailJS.'
                     })
                 })
                 .then(response => response.json())

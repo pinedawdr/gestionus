@@ -12,11 +12,11 @@
                             <circle cx="12" cy="8" r="2"></circle>
                             <path d="M5 12a7 7 0 0 0 14 0"></path>
                         </svg>
-                        <span class="ml-2 text-sm font-semibold text-gray-600">GestiónUS</span>
+                        <span class="ml-2 text-sm font-semibold text-gray-600">Gestionus</span>
                     </div>
                     <div class="text-center md:text-right">
                         <p class="text-sm text-gray-500">
-                            &copy; <?php echo date('Y'); ?> GestiónUS - Unidad de Seguros
+                            &copy; <?php echo date('Y'); ?> Gestionus - Unidad de Seguros
                         </p>
                         <p class="text-xs text-gray-400 mt-1">
                             Todos los derechos reservados

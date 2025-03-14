@@ -25,7 +25,7 @@ $current_page = basename($_SERVER['PHP_SELF']);
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?php echo isset($page_title) ? $page_title . ' - ' : ''; ?>GestiónUS</title>
+    <title><?php echo isset($page_title) ? $page_title . ' - ' : ''; ?>Gestionus</title>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <link rel="stylesheet" href="<?php echo $base_path; ?>/assets/css/styles.css">
     <?php if (isset($extra_css)): echo $extra_css; endif; ?>
@@ -78,7 +78,7 @@ $current_page = basename($_SERVER['PHP_SELF']);
                                     <circle cx="12" cy="8" r="2"></circle>
                                     <path d="M5 12a7 7 0 0 0 14 0"></path>
                                 </svg>
-                                <span class="ml-2 text-xl font-bold tracking-tight">GestiónUS</span>
+                                <span class="ml-2 text-xl font-bold tracking-tight">Gestionus</span>
                                 <?php if ($is_admin): ?>
                                 <span class="ml-2 bg-yellow-500 text-blue-900 text-xs px-2 py-1 rounded-full font-semibold">ADMIN</span>
                                 <?php endif; ?>
@@ -91,6 +91,7 @@ $current_page = basename($_SERVER['PHP_SELF']);
                                 <a href="<?php echo $base_path; ?>/admin/index.php" class="nav-link px-3 py-2 text-sm font-medium <?php echo ($current_page === 'index.php') ? 'active' : ''; ?>">Dashboard</a>
                                 <a href="<?php echo $base_path; ?>/admin/users.php" class="nav-link px-3 py-2 text-sm font-medium <?php echo ($current_page === 'users.php') ? 'active' : ''; ?>">Usuarios</a>
                                 <a href="<?php echo $base_path; ?>/admin/documents.php" class="nav-link px-3 py-2 text-sm font-medium <?php echo ($current_page === 'documents.php') ? 'active' : ''; ?>">Documentos</a>
+                                <a href="<?php echo $base_path; ?>/admin/folders.php" class="nav-link px-3 py-2 text-sm font-medium <?php echo ($current_page === 'folders.php') ? 'active' : ''; ?>">Archivos</a>
                                 <a href="<?php echo $base_path; ?>/admin/reports.php" class="nav-link px-3 py-2 text-sm font-medium <?php echo ($current_page === 'reports.php') ? 'active' : ''; ?>">Reportes</a>
                                 <a href="<?php echo $base_path; ?>/admin/settings.php" class="nav-link px-3 py-2 text-sm font-medium <?php echo ($current_page === 'settings.php') ? 'active' : ''; ?>">Configuración</a>
                             <?php else: ?>
@@ -139,6 +140,7 @@ $current_page = basename($_SERVER['PHP_SELF']);
                         <a href="<?php echo $base_path; ?>/admin/index.php" class="block px-3 py-2 rounded-md text-base font-medium hover:bg-blue-600 <?php echo ($current_page === 'index.php') ? 'bg-blue-600' : ''; ?>">Dashboard</a>
                         <a href="<?php echo $base_path; ?>/admin/users.php" class="block px-3 py-2 rounded-md text-base font-medium hover:bg-blue-600 <?php echo ($current_page === 'users.php') ? 'bg-blue-600' : ''; ?>">Usuarios</a>
                         <a href="<?php echo $base_path; ?>/admin/documents.php" class="block px-3 py-2 rounded-md text-base font-medium hover:bg-blue-600 <?php echo ($current_page === 'documents.php') ? 'bg-blue-600' : ''; ?>">Documentos</a>
+                        <a href="<?php echo $base_path; ?>/admin/folders.php" class="block px-3 py-2 rounded-md text-base font-medium hover:bg-blue-600 <?php echo ($current_page === 'folders.php') ? 'bg-blue-600' : ''; ?>">Archivos</a>
                         <a href="<?php echo $base_path; ?>/admin/reports.php" class="block px-3 py-2 rounded-md text-base font-medium hover:bg-blue-600 <?php echo ($current_page === 'reports.php') ? 'bg-blue-600' : ''; ?>">Reportes</a>
                         <a href="<?php echo $base_path; ?>/admin/settings.php" class="block px-3 py-2 rounded-md text-base font-medium hover:bg-blue-600 <?php echo ($current_page === 'settings.php') ? 'bg-blue-600' : ''; ?>">Configuración</a>
                     <?php else: ?>

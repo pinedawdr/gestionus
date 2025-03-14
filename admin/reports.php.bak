@@ -563,10 +563,10 @@ include_once '../includes/header.php';
                                         <label for="notification-message" class="block text-sm font-medium text-gray-700">Mensaje</label>
                                         <textarea id="notification-message" name="message" rows="4" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">Estimado usuario,
 
-Le recordamos que tiene un documento pendiente por subir en el sistema GestiónUS. Por favor, suba el documento requerido a la brevedad posible.
+Le recordamos que tiene un documento pendiente por subir en el sistema Gestionus. Por favor, suba el documento requerido a la brevedad posible.
 
 Saludos cordiales,
-Administración GestiónUS</textarea>
+Administración Gestionus</textarea>
                                     </div>
                                 </form>
                             </div>
@@ -588,7 +588,7 @@ Administración GestiónUS</textarea>
         <footer class="bg-white">
             <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
                 <p class="text-center text-sm text-gray-500">
-                    &copy; <?php echo date('Y'); ?> GestiónUS - Todos los derechos reservados
+                    &copy; <?php echo date('Y'); ?> Gestionus - Todos los derechos reservados
                 </p>
             </div>
         </footer>
@@ -685,10 +685,10 @@ Administración GestiónUS</textarea>
                 notificationSubject.value = `Recordatorio: ${docTypeName} Pendiente`;
                 notificationMessage.value = `Estimado usuario,
 
-Le recordamos que tiene pendiente la subida del ${docTypeName} en el sistema GestiónUS. Por favor, suba el documento requerido a la brevedad posible.
+Le recordamos que tiene pendiente la subida del ${docTypeName} en el sistema Gestionus. Por favor, suba el documento requerido a la brevedad posible.
 
 Saludos cordiales,
-Administración GestiónUS`;
+Administración Gestionus`;
             }
             
             // Mostrar modal

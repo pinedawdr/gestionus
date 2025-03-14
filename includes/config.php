@@ -1,6 +1,6 @@
 <?php
 // Configuración de la aplicación
-define('APP_NAME', 'GestiónUS');
+define('APP_NAME', 'Gestionus');
 define('APP_VERSION', '1.0.0');
 
 // Configuración de la base de datos

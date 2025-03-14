@@ -361,10 +361,10 @@ include_once '../includes/header.php';
                             <label for="notification-message" class="block text-sm font-medium text-gray-700">Mensaje</label>
                             <textarea id="notification-message" name="message" rows="4" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">Estimado/a usuario/a,
 
-Le recordamos que tiene documentos pendientes por subir en el sistema GestiónUS. Por favor, suba los documentos requeridos a la brevedad posible.
+Le recordamos que tiene documentos pendientes por subir en el sistema Gestionus. Por favor, suba los documentos requeridos a la brevedad posible.
 
 Saludos cordiales,
-Administración GestiónUS</textarea>
+Administración Gestionus</textarea>
                         </div>
                     </form>
                 </div>

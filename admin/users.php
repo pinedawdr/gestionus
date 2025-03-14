@@ -20,6 +20,43 @@ if (!$user) {
     exit;
 }
 
+// Inicializar variables de filtro
+$filter = isset($_GET['filter']) ? trim($_GET['filter']) : '';
+$role = isset($_GET['role']) ? trim($_GET['role']) : '';
+$status = isset($_GET['status']) ? trim($_GET['status']) : '';
+
+// Construir la consulta SQL para obtener usuarios
+$sqlUsers = "SELECT u.*, 
+            DATE_FORMAT(u.last_login, '%d/%m/%Y %H:%i') AS last_login_formatted 
+            FROM users u 
+            WHERE 1=1";
+$params = [];
+
+// Aplicar filtros si existen
+if (!empty($filter)) {
+    $sqlUsers .= " AND (u.name LIKE ? OR u.email LIKE ? OR u.dni LIKE ?)";
+    $filterParam = "%$filter%";
+    $params[] = $filterParam;
+    $params[] = $filterParam;
+    $params[] = $filterParam;
+}
+
+if (!empty($role)) {
+    $sqlUsers .= " AND u.role = ?";
+    $params[] = $role;
+}
+
+if ($status !== '') {
+    $sqlUsers .= " AND u.active = ?";
+    $params[] = $status;
+}
+
+// Ordenar por nombre
+$sqlUsers .= " ORDER BY u.name ASC";
+
+// Ejecutar la consulta
+$users = $db->fetchAll($sqlUsers, $params);
+
 // Definir variables para el header
 $page_title = "Gestión de Usuarios";
 $_SESSION['name'] = $user['name'];
@@ -318,7 +355,7 @@ include_once '../includes/header.php';
         <footer class="bg-white">
             <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
                 <p class="text-center text-sm text-gray-500">
-                    &copy; <?php echo date('Y'); ?> GestiónUS - Todos los derechos reservados
+                    &copy; <?php echo date('Y'); ?> Gestionus - Todos los derechos reservados
                 </p>
             </div>
         </footer>
