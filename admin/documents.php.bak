@@ -20,15 +20,85 @@ if (!$user) {
     exit;
 }
 
+// Parámetros de filtrado
+$filter = isset($_GET['filter']) ? sanitize($_GET['filter']) : '';
+$type = isset($_GET['type']) ? sanitize($_GET['type']) : '';
+$userId = isset($_GET['user_id']) ? (int)$_GET['user_id'] : 0;
+$startDate = isset($_GET['start_date']) ? sanitize($_GET['start_date']) : '';
+$endDate = isset($_GET['end_date']) ? sanitize($_GET['end_date']) : '';
+
+// Obtener usuarios para filtro
+$sql = "SELECT id, name FROM users WHERE active = 1 ORDER BY name";
+$users = $db->fetchAll($sql);
+
+// Obtener documentos con filtros
+$params = [];
+$sql = "SELECT d.*, u.name as user_name 
+        FROM documents d 
+        JOIN users u ON d.user_id = u.id 
+        WHERE 1=1";
+
+if (!empty($filter)) {
+    $sql .= " AND (d.original_name LIKE ? OR d.description LIKE ? OR u.name LIKE ?)";
+    $searchTerm = "%{$filter}%";
+    $params[] = $searchTerm;
+    $params[] = $searchTerm;
+    $params[] = $searchTerm;
+}
+
+if (!empty($type)) {
+    $sql .= " AND d.type = ?";
+    $params[] = $type;
+}
+
+if ($userId > 0) {
+    $sql .= " AND d.user_id = ?";
+    $params[] = $userId;
+}
+
+if (!empty($startDate)) {
+    $sql .= " AND DATE(d.created_at) >= ?";
+    $params[] = $startDate;
+}
+
+if (!empty($endDate)) {
+    $sql .= " AND DATE(d.created_at) <= ?";
+    $params[] = $endDate;
+}
+
+$sql .= " ORDER BY d.created_at DESC";
+
+$documents = $db->fetchAll($sql, $params);
+
+// Preparar URLs seguras para los documentos
+foreach ($documents as &$doc) {
+    $doc['secure_url'] = getSecureFileUrl($doc['file_path']);
+    $doc['file_type'] = getFileType($doc['original_name']);
+    $doc['created_at_formatted'] = formatDate($doc['created_at']);
+}
+
+// Función helper para formatear tamaño de archivo
+function formatFileSize($bytes) {
+    if ($bytes === 0) return '0 Bytes';
+    $k = 1024;
+    $sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+    $i = floor(log($bytes) / log($k));
+    return round($bytes / pow($k, $i), 2) . ' ' . $sizes[$i];
+}
+?>
 // Definir variables para el header
-$page_title = "Gestión de Documentos";
+$page_title = "Documents";
 $_SESSION['name'] = $user['name'];
 
 // Incluir el header global
 include_once '../includes/header.php';
 ?>
 
-<h1 class="text-2xl font-semibold text-gray-900 mb-6">Gestión de Documentos</h1>
+<!-- Contenido principal -->
+
+
+            <div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+                <h1 class="text-2xl font-semibold text-gray-900 mb-6">Gestión de Documentos</h1>
                 
                 <!-- Filtros -->
                 <div class="bg-white shadow rounded-lg mb-6">
@@ -302,5 +372,3 @@ include_once '../includes/header.php';
     </script>
 </body>
 </html>
-
-<?php include_once '../includes/footer.php'; ?>

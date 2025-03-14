@@ -15,7 +15,10 @@ if (strpos($current_path, '/admin/') !== false) {
 $is_admin = isset($_SESSION['role']) && $_SESSION['role'] === 'admin';
 
 // Obtener nombre de usuario si está disponible
-$user_name = isset($_SESSION['user_name']) ? $_SESSION['user_name'] : (isset($user['name']) ? $user['name'] : '');
+$user_name = isset($_SESSION['name']) ? $_SESSION['name'] : (isset($user['name']) ? $user['name'] : '');
+
+// Determinar página actual para resaltar en el menú
+$current_page = basename($_SERVER['PHP_SELF']);
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -85,15 +88,15 @@ $user_name = isset($_SESSION['user_name']) ? $_SESSION['user_name'] : (isset($us
                         <!-- Menú de navegación para pantallas medianas y grandes -->
                         <div class="hidden sm:ml-6 sm:flex sm:space-x-8">
                             <?php if ($is_admin): ?>
-                                <a href="<?php echo $base_path; ?>/admin/index.php" class="nav-link px-3 py-2 text-sm font-medium <?php echo (strpos($current_path, '/admin/index.php') !== false) ? 'active' : ''; ?>">Dashboard</a>
-                                <a href="<?php echo $base_path; ?>/admin/users.php" class="nav-link px-3 py-2 text-sm font-medium <?php echo (strpos($current_path, '/admin/users.php') !== false) ? 'active' : ''; ?>">Usuarios</a>
-                                <a href="<?php echo $base_path; ?>/admin/documents.php" class="nav-link px-3 py-2 text-sm font-medium <?php echo (strpos($current_path, '/admin/documents.php') !== false) ? 'active' : ''; ?>">Documentos</a>
-                                <a href="<?php echo $base_path; ?>/admin/reports.php" class="nav-link px-3 py-2 text-sm font-medium <?php echo (strpos($current_path, '/admin/reports.php') !== false) ? 'active' : ''; ?>">Reportes</a>
-                                <a href="<?php echo $base_path; ?>/admin/settings.php" class="nav-link px-3 py-2 text-sm font-medium <?php echo (strpos($current_path, '/admin/settings.php') !== false) ? 'active' : ''; ?>">Configuración</a>
+                                <a href="<?php echo $base_path; ?>/admin/index.php" class="nav-link px-3 py-2 text-sm font-medium <?php echo ($current_page === 'index.php') ? 'active' : ''; ?>">Dashboard</a>
+                                <a href="<?php echo $base_path; ?>/admin/users.php" class="nav-link px-3 py-2 text-sm font-medium <?php echo ($current_page === 'users.php') ? 'active' : ''; ?>">Usuarios</a>
+                                <a href="<?php echo $base_path; ?>/admin/documents.php" class="nav-link px-3 py-2 text-sm font-medium <?php echo ($current_page === 'documents.php') ? 'active' : ''; ?>">Documentos</a>
+                                <a href="<?php echo $base_path; ?>/admin/reports.php" class="nav-link px-3 py-2 text-sm font-medium <?php echo ($current_page === 'reports.php') ? 'active' : ''; ?>">Reportes</a>
+                                <a href="<?php echo $base_path; ?>/admin/settings.php" class="nav-link px-3 py-2 text-sm font-medium <?php echo ($current_page === 'settings.php') ? 'active' : ''; ?>">Configuración</a>
                             <?php else: ?>
-                                <a href="<?php echo $base_path; ?>/user/index.php" class="nav-link px-3 py-2 text-sm font-medium <?php echo (strpos($current_path, '/user/index.php') !== false) ? 'active' : ''; ?>">Dashboard</a>
-                                <a href="<?php echo $base_path; ?>/user/documents.php" class="nav-link px-3 py-2 text-sm font-medium <?php echo (strpos($current_path, '/user/documents.php') !== false) ? 'active' : ''; ?>">Mis Documentos</a>
-                                <a href="<?php echo $base_path; ?>/user/profile.php" class="nav-link px-3 py-2 text-sm font-medium <?php echo (strpos($current_path, '/user/profile.php') !== false) ? 'active' : ''; ?>">Mi Perfil</a>
+                                <a href="<?php echo $base_path; ?>/user/index.php" class="nav-link px-3 py-2 text-sm font-medium <?php echo ($current_page === 'index.php') ? 'active' : ''; ?>">Dashboard</a>
+                                <a href="<?php echo $base_path; ?>/user/documents.php" class="nav-link px-3 py-2 text-sm font-medium <?php echo ($current_page === 'documents.php') ? 'active' : ''; ?>">Mis Documentos</a>
+                                <a href="<?php echo $base_path; ?>/user/profile.php" class="nav-link px-3 py-2 text-sm font-medium <?php echo ($current_page === 'profile.php') ? 'active' : ''; ?>">Mi Perfil</a>
                             <?php endif; ?>
                         </div>
                     </div>
@@ -108,7 +111,7 @@ $user_name = isset($_SESSION['user_name']) ? $_SESSION['user_name'] : (isset($us
                     </div>
                     
                     <!-- Información de usuario y cerrar sesión -->
-                    <div class="hidden sm:flex items-center">
+                    <div class="hidden sm:flex sm:items-center">
                         <?php if (isset($_SESSION['user_id'])): ?>
                             <div class="flex items-center">
                                 <div class="flex items-center space-x-1 mr-3">
@@ -133,15 +136,15 @@ $user_name = isset($_SESSION['user_name']) ? $_SESSION['user_name'] : (isset($us
             <div id="mobile-menu" class="sm:hidden mobile-menu">
                 <div class="px-2 pt-2 pb-3 space-y-1 border-t border-blue-400">
                     <?php if ($is_admin): ?>
-                        <a href="<?php echo $base_path; ?>/admin/index.php" class="block px-3 py-2 rounded-md text-base font-medium hover:bg-blue-600 <?php echo (strpos($current_path, '/admin/index.php') !== false) ? 'bg-blue-600' : ''; ?>">Dashboard</a>
-                        <a href="<?php echo $base_path; ?>/admin/users.php" class="block px-3 py-2 rounded-md text-base font-medium hover:bg-blue-600 <?php echo (strpos($current_path, '/admin/users.php') !== false) ? 'bg-blue-600' : ''; ?>">Usuarios</a>
-                        <a href="<?php echo $base_path; ?>/admin/documents.php" class="block px-3 py-2 rounded-md text-base font-medium hover:bg-blue-600 <?php echo (strpos($current_path, '/admin/documents.php') !== false) ? 'bg-blue-600' : ''; ?>">Documentos</a>
-                        <a href="<?php echo $base_path; ?>/admin/reports.php" class="block px-3 py-2 rounded-md text-base font-medium hover:bg-blue-600 <?php echo (strpos($current_path, '/admin/reports.php') !== false) ? 'bg-blue-600' : ''; ?>">Reportes</a>
-                        <a href="<?php echo $base_path; ?>/admin/settings.php" class="block px-3 py-2 rounded-md text-base font-medium hover:bg-blue-600 <?php echo (strpos($current_path, '/admin/settings.php') !== false) ? 'bg-blue-600' : ''; ?>">Configuración</a>
+                        <a href="<?php echo $base_path; ?>/admin/index.php" class="block px-3 py-2 rounded-md text-base font-medium hover:bg-blue-600 <?php echo ($current_page === 'index.php') ? 'bg-blue-600' : ''; ?>">Dashboard</a>
+                        <a href="<?php echo $base_path; ?>/admin/users.php" class="block px-3 py-2 rounded-md text-base font-medium hover:bg-blue-600 <?php echo ($current_page === 'users.php') ? 'bg-blue-600' : ''; ?>">Usuarios</a>
+                        <a href="<?php echo $base_path; ?>/admin/documents.php" class="block px-3 py-2 rounded-md text-base font-medium hover:bg-blue-600 <?php echo ($current_page === 'documents.php') ? 'bg-blue-600' : ''; ?>">Documentos</a>
+                        <a href="<?php echo $base_path; ?>/admin/reports.php" class="block px-3 py-2 rounded-md text-base font-medium hover:bg-blue-600 <?php echo ($current_page === 'reports.php') ? 'bg-blue-600' : ''; ?>">Reportes</a>
+                        <a href="<?php echo $base_path; ?>/admin/settings.php" class="block px-3 py-2 rounded-md text-base font-medium hover:bg-blue-600 <?php echo ($current_page === 'settings.php') ? 'bg-blue-600' : ''; ?>">Configuración</a>
                     <?php else: ?>
-                        <a href="<?php echo $base_path; ?>/user/index.php" class="block px-3 py-2 rounded-md text-base font-medium hover:bg-blue-600 <?php echo (strpos($current_path, '/user/index.php') !== false) ? 'bg-blue-600' : ''; ?>">Dashboard</a>
-                        <a href="<?php echo $base_path; ?>/user/documents.php" class="block px-3 py-2 rounded-md text-base font-medium hover:bg-blue-600 <?php echo (strpos($current_path, '/user/documents.php') !== false) ? 'bg-blue-600' : ''; ?>">Mis Documentos</a>
-                        <a href="<?php echo $base_path; ?>/user/profile.php" class="block px-3 py-2 rounded-md text-base font-medium hover:bg-blue-600 <?php echo (strpos($current_path, '/user/profile.php') !== false) ? 'bg-blue-600' : ''; ?>">Mi Perfil</a>
+                        <a href="<?php echo $base_path; ?>/user/index.php" class="block px-3 py-2 rounded-md text-base font-medium hover:bg-blue-600 <?php echo ($current_page === 'index.php') ? 'bg-blue-600' : ''; ?>">Dashboard</a>
+                        <a href="<?php echo $base_path; ?>/user/documents.php" class="block px-3 py-2 rounded-md text-base font-medium hover:bg-blue-600 <?php echo ($current_page === 'documents.php') ? 'bg-blue-600' : ''; ?>">Mis Documentos</a>
+                        <a href="<?php echo $base_path; ?>/user/profile.php" class="block px-3 py-2 rounded-md text-base font-medium hover:bg-blue-600 <?php echo ($current_page === 'profile.php') ? 'bg-blue-600' : ''; ?>">Mi Perfil</a>
                     <?php endif; ?>
                     
                     <?php if (isset($_SESSION['user_id'])): ?>

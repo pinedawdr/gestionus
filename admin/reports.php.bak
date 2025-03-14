@@ -20,15 +20,281 @@ if (!$user) {
     exit;
 }
 
+// Definir variables para reportes
+$reportType = isset($_GET['report_type']) ? sanitize($_GET['report_type']) : '';
+$startDate = isset($_GET['start_date']) ? sanitize($_GET['start_date']) : date('Y-m-01'); // Primer día del mes actual
+$endDate = isset($_GET['end_date']) ? sanitize($_GET['end_date']) : date('Y-m-d'); // Día actual
+$selectedUserId = isset($_GET['user_id']) ? (int)$_GET['user_id'] : 0;
+
+// Obtener usuarios para filtro
+$sql = "SELECT id, name FROM users WHERE active = 1 ORDER BY name";
+$users = $db->fetchAll($sql);
+
+// Variables para almacenar datos de reportes
+$reportData = [];
+$reportTitle = '';
+$chartType = 'bar';
+$chartLabels = [];
+$chartData = [];
+$chartColors = [];
+
+// Generar reporte según el tipo seleccionado
+if (!empty($reportType)) {
+    switch ($reportType) {
+        case 'uploads_by_user':
+            $reportTitle = 'Documentos Subidos por Usuario';
+            
+            // Consulta para documentos por usuario
+            $sql = "SELECT u.name, COUNT(d.id) as total_docs 
+                    FROM users u 
+                    LEFT JOIN documents d ON u.id = d.user_id";
+            
+            $whereConditions = [];
+            $params = [];
+            
+            if (!empty($startDate)) {
+                $whereConditions[] = "d.created_at >= ?";
+                $params[] = $startDate . ' 00:00:00';
+            }
+            
+            if (!empty($endDate)) {
+                $whereConditions[] = "d.created_at <= ?";
+                $params[] = $endDate . ' 23:59:59';
+            }
+            
+            if ($selectedUserId > 0) {
+                $whereConditions[] = "u.id = ?";
+                $params[] = $selectedUserId;
+            } else {
+                // Solo incluir usuarios activos si no se seleccionó uno específico
+                $whereConditions[] = "u.active = 1";
+            }
+            
+            if (!empty($whereConditions)) {
+                $sql .= " WHERE " . implode(" AND ", $whereConditions);
+            }
+            
+            $sql .= " GROUP BY u.id, u.name ORDER BY total_docs DESC";
+            
+            $reportData = $db->fetchAll($sql, $params);
+            
+            // Preparar datos para gráfico
+            foreach ($reportData as $item) {
+                $chartLabels[] = $item['name'];
+                $chartData[] = $item['total_docs'];
+                $chartColors[] = 'rgba(54, 162, 235, 0.7)';
+            }
+            break;
+            
+        case 'uploads_by_type':
+            $reportTitle = 'Documentos por Tipo';
+            
+            // Consulta para documentos por tipo
+            $sql = "SELECT d.type, COUNT(d.id) as total 
+                    FROM documents d";
+            
+            $whereConditions = [];
+            $params = [];
+            
+            if (!empty($startDate)) {
+                $whereConditions[] = "d.created_at >= ?";
+                $params[] = $startDate . ' 00:00:00';
+            }
+            
+            if (!empty($endDate)) {
+                $whereConditions[] = "d.created_at <= ?";
+                $params[] = $endDate . ' 23:59:59';
+            }
+            
+            if ($selectedUserId > 0) {
+                $whereConditions[] = "d.user_id = ?";
+                $params[] = $selectedUserId;
+            }
+            
+            if (!empty($whereConditions)) {
+                $sql .= " WHERE " . implode(" AND ", $whereConditions);
+            }
+            
+            $sql .= " GROUP BY d.type ORDER BY total DESC";
+            
+            $reportData = $db->fetchAll($sql, $params);
+            
+            // Preparar datos para gráfico
+            $chartType = 'pie';
+            foreach ($reportData as $item) {
+                $typeLabel = '';
+                switch ($item['type']) {
+                    case 'backup':
+                        $typeLabel = 'Backups';
+                        $color = 'rgba(54, 162, 235, 0.7)';
+                        break;
+                    case 'evidencia':
+                        $typeLabel = 'Evidencias';
+                        $color = 'rgba(75, 192, 192, 0.7)';
+                        break;
+                    case 'reporte_cnv':
+                        $typeLabel = 'Reportes CNV';
+                        $color = 'rgba(153, 102, 255, 0.7)';
+                        break;
+                    default:
+                        $typeLabel = 'Otros';
+                        $color = 'rgba(201, 203, 207, 0.7)';
+                }
+                
+                $chartLabels[] = $typeLabel;
+                $chartData[] = $item['total'];
+                $chartColors[] = $color;
+            }
+            break;
+            
+        case 'uploads_by_date':
+            $reportTitle = 'Documentos por Fecha';
+            
+            // Consulta para documentos por fecha
+            $sql = "SELECT DATE(d.created_at) as upload_date, COUNT(d.id) as total 
+                    FROM documents d";
+            
+            $whereConditions = [];
+            $params = [];
+            
+            if (!empty($startDate)) {
+                $whereConditions[] = "d.created_at >= ?";
+                $params[] = $startDate . ' 00:00:00';
+            }
+            
+            if (!empty($endDate)) {
+                $whereConditions[] = "d.created_at <= ?";
+                $params[] = $endDate . ' 23:59:59';
+            }
+            
+            if ($selectedUserId > 0) {
+                $whereConditions[] = "d.user_id = ?";
+                $params[] = $selectedUserId;
+            }
+            
+            if (!empty($whereConditions)) {
+                $sql .= " WHERE " . implode(" AND ", $whereConditions);
+            }
+            
+            $sql .= " GROUP BY DATE(d.created_at) ORDER BY upload_date ASC";
+            
+            $reportData = $db->fetchAll($sql, $params);
+            
+            // Preparar datos para gráfico
+            $chartType = 'line';
+            foreach ($reportData as $item) {
+                // Formatear fecha para mostrar
+                $date = new DateTime($item['upload_date']);
+                $chartLabels[] = $date->format('d/m/Y');
+                $chartData[] = $item['total'];
+            }
+            
+            // Solo un color para línea
+            $chartColors[] = 'rgba(54, 162, 235, 0.7)';
+            break;
+            
+        case 'missing_uploads':
+            $reportTitle = 'Documentos Pendientes';
+            
+            // Obtener usuarios activos
+            $sql = "SELECT id, name, email FROM users WHERE active = 1 AND role = 'user'";
+            if ($selectedUserId > 0) {
+                $sql .= " AND id = ?";
+                $activeUsers = $db->fetchAll($sql, [$selectedUserId]);
+            } else {
+                $activeUsers = $db->fetchAll($sql);
+            }
+            
+            // Calcular fechas para las verificaciones
+            $checkDate = new DateTime();
+            if (!empty($endDate)) {
+                $checkDate = new DateTime($endDate);
+            }
+            
+            $reportData = [];
+            
+            // Verificar cada tipo de documento para cada usuario
+            foreach ($activeUsers as $activeUser) {
+                $missingDocs = [];
+                
+                // Verificar backups (viernes)
+                $lastFriday = clone $checkDate;
+                while ($lastFriday->format('N') != 5) { // 5 = viernes
+                    $lastFriday->modify('-1 day');
+                }
+                
+                $sql = "SELECT COUNT(*) as count FROM documents 
+                        WHERE user_id = ? AND type = 'backup' 
+                        AND DATE(created_at) = ?";
+                $result = $db->fetchOne($sql, [$activeUser['id'], $lastFriday->format('Y-m-d')]);
+                
+                if ($result['count'] == 0) {
+                    $missingDocs[] = [
+                        'type' => 'backup',
+                        'due_date' => $lastFriday->format('d/m/Y'),
+                        'status' => 'Pendiente'
+                    ];
+                }
+                
+                // Verificar evidencias (viernes)
+                $sql = "SELECT COUNT(*) as count FROM documents 
+                        WHERE user_id = ? AND type = 'evidencia' 
+                        AND DATE(created_at) = ?";
+                $result = $db->fetchOne($sql, [$activeUser['id'], $lastFriday->format('Y-m-d')]);
+                
+                if ($result['count'] == 0) {
+                    $missingDocs[] = [
+                        'type' => 'evidencia',
+                        'due_date' => $lastFriday->format('d/m/Y'),
+                        'status' => 'Pendiente'
+                    ];
+                }
+                
+                // Verificar reportes CNV (martes)
+                $lastTuesday = clone $checkDate;
+                while ($lastTuesday->format('N') != 2) { // 2 = martes
+                    $lastTuesday->modify('-1 day');
+                }
+                
+                $sql = "SELECT COUNT(*) as count FROM documents 
+                        WHERE user_id = ? AND type = 'reporte_cnv' 
+                        AND DATE(created_at) = ?";
+                $result = $db->fetchOne($sql, [$activeUser['id'], $lastTuesday->format('Y-m-d')]);
+                
+                if ($result['count'] == 0) {
+                    $missingDocs[] = [
+                        'type' => 'reporte_cnv',
+                        'due_date' => $lastTuesday->format('d/m/Y'),
+                        'status' => 'Pendiente'
+                    ];
+                }
+                
+                if (!empty($missingDocs)) {
+                    $reportData[] = [
+                        'user_id' => $activeUser['id'],
+                        'user_name' => $activeUser['name'],
+                        'user_email' => $activeUser['email'],
+                        'missing_docs' => $missingDocs
+                    ];
+                }
+            }
+            break;
+    }
+}
+?>
 // Definir variables para el header
-$page_title = "Reportes";
+$page_title = "Reports";
 $_SESSION['name'] = $user['name'];
 
 // Incluir el header global
 include_once '../includes/header.php';
 ?>
 
-<h1 class="text-2xl font-semibold text-gray-900 mb-6">Reportes</h1>
+<!-- Contenido principal -->
+
+
+            <div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+                <h1 class="text-2xl font-semibold text-gray-900 mb-6">Reportes</h1>
                 
                 <!-- Filtros de reporte -->
                 <div class="bg-white shadow rounded-lg mb-6">
@@ -599,5 +865,3 @@ Administración GestiónUS`;
     </script>
 </body>
 </html>
-
-<?php include_once '../includes/footer.php'; ?>

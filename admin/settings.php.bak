@@ -20,15 +20,221 @@ if (!$user) {
     exit;
 }
 
+// Inicializar variables para mensajes
+$successMessage = '';
+$errorMessage = '';
+
+// Procesar formulario de configuración de correo
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'email_config') {
+    $emailjsUserId = sanitize($_POST['emailjs_user_id']);
+    $emailjsServiceId = sanitize($_POST['emailjs_service_id']);
+    $emailjsTemplateId = sanitize($_POST['emailjs_template_id']);
+    
+    // Validar datos
+    if (empty($emailjsUserId) || empty($emailjsServiceId) || empty($emailjsTemplateId)) {
+        $errorMessage = 'Todos los campos son obligatorios';
+    } else {
+        // Actualizar archivo config.php
+        $configFile = file_get_contents(BASE_PATH . '/includes/config.php');
+        
+        // Reemplazar valores
+        $configFile = preg_replace('/define\(\'EMAILJS_USER_ID\',\s*\'.*?\'\);/', "define('EMAILJS_USER_ID', '$emailjsUserId');", $configFile);
+        $configFile = preg_replace('/define\(\'EMAILJS_SERVICE_ID\',\s*\'.*?\'\);/', "define('EMAILJS_SERVICE_ID', '$emailjsServiceId');", $configFile);
+        $configFile = preg_replace('/define\(\'EMAILJS_TEMPLATE_ID\',\s*\'.*?\'\);/', "define('EMAILJS_TEMPLATE_ID', '$emailjsTemplateId');", $configFile);
+        
+// Guardar archivo
+if (file_put_contents(BASE_PATH . '/includes/config.php', $configFile)) {
+    $successMessage = 'Configuración de correo actualizada correctamente';
+} else {
+    $errorMessage = 'Error al guardar la configuración. Verifica los permisos del archivo.';
+}
+}
+}
+
+// Procesar formulario de configuración de Firebase
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'firebase_config') {
+$firebaseApiKey = sanitize($_POST['firebase_api_key']);
+
+// Validar datos
+if (empty($firebaseApiKey)) {
+$errorMessage = 'La API Key es obligatoria';
+} else {
+// Actualizar archivo config.php
+$configFile = file_get_contents(BASE_PATH . '/includes/config.php');
+
+// Reemplazar valores
+$configFile = preg_replace('/define\(\'FIREBASE_API_KEY\',\s*\'.*?\'\);/', "define('FIREBASE_API_KEY', '$firebaseApiKey');", $configFile);
+
+// Guardar archivo
+if (file_put_contents(BASE_PATH . '/includes/config.php', $configFile)) {
+    // Actualizar archivo firebase-config.js
+    $firebaseConfigFile = "// Configuración de Firebase
+const firebaseConfig = {
+apiKey: \"$firebaseApiKey\", // Reemplazar con tu API Key
+authDomain: \"tu-proyecto.firebaseapp.com\", // Reemplazar con tu Auth Domain
+projectId: \"tu-proyecto\", // Reemplazar con tu Project ID
+storageBucket: \"tu-proyecto.appspot.com\", // Reemplazar con tu Storage Bucket
+messagingSenderId: \"tu-messaging-sender-id\", // Reemplazar con tu Messaging Sender ID
+appId: \"tu-app-id\" // Reemplazar con tu App ID
+};
+
+// Inicializar Firebase
+firebase.initializeApp(firebaseConfig);";
+    
+    if (file_put_contents(BASE_PATH . '/firebase-config.js', $firebaseConfigFile)) {
+        $successMessage = 'Configuración de Firebase actualizada correctamente';
+    } else {
+        $errorMessage = 'Error al guardar la configuración de Firebase. Verifica los permisos del archivo.';
+    }
+} else {
+    $errorMessage = 'Error al guardar la configuración. Verifica los permisos del archivo.';
+}
+}
+}
+
+// Procesar formulario de configuración de base de datos
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'db_config') {
+$dbHost = sanitize($_POST['db_host']);
+$dbUser = sanitize($_POST['db_user']);
+$dbPass = sanitize($_POST['db_pass']);
+$dbName = sanitize($_POST['db_name']);
+
+// Validar datos
+if (empty($dbHost) || empty($dbUser) || empty($dbName)) {
+$errorMessage = 'Host, Usuario y Nombre de la base de datos son obligatorios';
+} else {
+// Actualizar archivo config.php
+$configFile = file_get_contents(BASE_PATH . '/includes/config.php');
+
+// Reemplazar valores
+$configFile = preg_replace('/define\(\'DB_HOST\',\s*\'.*?\'\);/', "define('DB_HOST', '$dbHost');", $configFile);
+$configFile = preg_replace('/define\(\'DB_USER\',\s*\'.*?\'\);/', "define('DB_USER', '$dbUser');", $configFile);
+$configFile = preg_replace('/define\(\'DB_PASS\',\s*\'.*?\'\);/', "define('DB_PASS', '$dbPass');", $configFile);
+$configFile = preg_replace('/define\(\'DB_NAME\',\s*\'.*?\'\);/', "define('DB_NAME', '$dbName');", $configFile);
+
+// Guardar archivo
+if (file_put_contents(BASE_PATH . '/includes/config.php', $configFile)) {
+    $successMessage = 'Configuración de base de datos actualizada correctamente';
+} else {
+    $errorMessage = 'Error al guardar la configuración. Verifica los permisos del archivo.';
+}
+}
+}
+
+// Procesar creación de la base de datos
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'create_db') {
+try {
+// Conectar a la base de datos sin seleccionar una base de datos específica
+$pdo = new PDO(
+    "mysql:host=" . DB_HOST . ";charset=utf8mb4",
+    DB_USER,
+    DB_PASS,
+    [
+        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+        PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+        PDO::ATTR_EMULATE_PREPARES => false
+    ]
+);
+
+// Crear base de datos si no existe
+$pdo->exec("CREATE DATABASE IF NOT EXISTS `" . DB_NAME . "` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci");
+
+// Seleccionar la base de datos
+$pdo->exec("USE `" . DB_NAME . "`");
+
+// Crear tabla de usuarios
+$pdo->exec("CREATE TABLE IF NOT EXISTS `users` (
+    `id` int(11) NOT NULL AUTO_INCREMENT,
+    `name` varchar(255) NOT NULL,
+    `email` varchar(255) NOT NULL,
+    `firebase_uid` varchar(255) NOT NULL,
+    `dni` varchar(50) NOT NULL,
+    `punto_digitacion` varchar(255) NOT NULL,
+    `fecha_nacimiento` date DEFAULT NULL,
+    `role` enum('admin','user') NOT NULL DEFAULT 'user',
+    `active` tinyint(1) NOT NULL DEFAULT 1,
+    `login_count` int(11) NOT NULL DEFAULT 0,
+    `last_login` datetime DEFAULT NULL,
+    `created_at` datetime NOT NULL,
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `email` (`email`),
+    UNIQUE KEY `firebase_uid` (`firebase_uid`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+
+// Crear tabla de documentos
+$pdo->exec("CREATE TABLE IF NOT EXISTS `documents` (
+    `id` int(11) NOT NULL AUTO_INCREMENT,
+    `user_id` int(11) NOT NULL,
+    `type` enum('backup','evidencia','reporte_cnv','otro') NOT NULL,
+    `file_name` varchar(255) NOT NULL,
+    `original_name` varchar(255) NOT NULL,
+    `file_path` varchar(512) NOT NULL,
+    `file_size` int(11) NOT NULL,
+    `description` text DEFAULT NULL,
+    `created_at` datetime NOT NULL,
+    PRIMARY KEY (`id`),
+    KEY `user_id` (`user_id`),
+    KEY `type` (`type`),
+    KEY `created_at` (`created_at`),
+    CONSTRAINT `documents_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+
+// Crear tabla de notificaciones
+$pdo->exec("CREATE TABLE IF NOT EXISTS `notifications` (
+    `id` int(11) NOT NULL AUTO_INCREMENT,
+    `user_id` int(11) NOT NULL,
+    `subject` varchar(255) NOT NULL,
+    `message` text NOT NULL,
+    `created_at` datetime NOT NULL,
+    `read_at` datetime DEFAULT NULL,
+    PRIMARY KEY (`id`),
+    KEY `user_id` (`user_id`),
+    CONSTRAINT `notifications_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+
+// Crear usuario administrador por defecto
+$stmt = $pdo->prepare("SELECT COUNT(*) as count FROM users WHERE role = 'admin'");
+$stmt->execute();
+$result = $stmt->fetch();
+
+if ($result['count'] == 0) {
+    // Crear carpetas para uploads
+    $uploadFolders = [
+        BASE_PATH . '/uploads',
+        BASE_PATH . '/uploads/backups',
+        BASE_PATH . '/uploads/evidencias',
+        BASE_PATH . '/uploads/reportes_cnv',
+        BASE_PATH . '/uploads/otros'
+    ];
+    
+    foreach ($uploadFolders as $folder) {
+        if (!file_exists($folder)) {
+            mkdir($folder, 0755, true);
+        }
+    }
+    
+    $successMessage = 'Base de datos y tablas creadas correctamente. Se han creado las carpetas necesarias para los archivos.';
+} else {
+    $successMessage = 'Base de datos y tablas verificadas correctamente.';
+}
+} catch (PDOException $e) {
+$errorMessage = 'Error al crear la base de datos: ' . $e->getMessage();
+}
+}
+?>
 // Definir variables para el header
-$page_title = "Configuración";
+$page_title = "Settings";
 $_SESSION['name'] = $user['name'];
 
 // Incluir el header global
 include_once '../includes/header.php';
 ?>
 
-<h1 class="text-2xl font-semibold text-gray-900 mb-6">Configuración del Sistema</h1>
+<!-- Contenido principal -->
+
+
+    <div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+        <h1 class="text-2xl font-semibold text-gray-900 mb-6">Configuración del Sistema</h1>
         
         <?php if (!empty($successMessage)): ?>
         <div class="bg-green-50 border-l-4 border-green-400 p-4 mb-6">
@@ -466,5 +672,3 @@ include_once '../includes/header.php';
     </script>
 </body>
 </html>
-
-<?php include_once '../includes/footer.php'; ?>

@@ -20,15 +20,58 @@ if (!$user) {
     exit;
 }
 
+// Parámetros de filtrado
+$filter = isset($_GET['filter']) ? sanitize($_GET['filter']) : '';
+$role = isset($_GET['role']) ? sanitize($_GET['role']) : '';
+$status = isset($_GET['status']) ? sanitize($_GET['status']) : '';
+
+// Obtener usuarios con filtros
+$params = [];
+$sql = "SELECT * FROM users WHERE 1=1";
+
+if (!empty($filter)) {
+    $sql .= " AND (name LIKE ? OR email LIKE ? OR dni LIKE ? OR punto_digitacion LIKE ?)";
+    $searchTerm = "%{$filter}%";
+    $params[] = $searchTerm;
+    $params[] = $searchTerm;
+    $params[] = $searchTerm;
+    $params[] = $searchTerm;
+}
+
+if (!empty($role)) {
+    $sql .= " AND role = ?";
+    $params[] = $role;
+}
+
+if ($status !== '') {
+    $sql .= " AND active = ?";
+    $params[] = (int)$status;
+}
+
+$sql .= " ORDER BY name ASC";
+
+$users = $db->fetchAll($sql, $params);
+
+// Formatear fechas para los usuarios
+foreach ($users as &$userItem) {
+    $userItem['created_at_formatted'] = formatDate($userItem['created_at']);
+    $userItem['last_login_formatted'] = $userItem['last_login'] ? formatDate($userItem['last_login']) : 'Nunca';
+    $userItem['fecha_nacimiento_formatted'] = $userItem['fecha_nacimiento'] ? formatDate($userItem['fecha_nacimiento'], 'd/m/Y') : 'No especificada';
+}
+?>
 // Definir variables para el header
-$page_title = "Gestión de Usuarios";
+$page_title = "Users";
 $_SESSION['name'] = $user['name'];
 
 // Incluir el header global
 include_once '../includes/header.php';
 ?>
 
-<h1 class="text-2xl font-semibold text-gray-900 mb-6">Gestión de Usuarios</h1>
+<!-- Contenido principal -->
+
+
+            <div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+                <h1 class="text-2xl font-semibold text-gray-900 mb-6">Gestión de Usuarios</h1>
                 
                 <!-- Filtros y botón de crear usuario -->
                 <div class="bg-white shadow rounded-lg mb-6">
@@ -694,5 +737,3 @@ include_once '../includes/header.php';
     </script>
 </body>
 </html>
-
-<?php include_once '../includes/footer.php'; ?>
