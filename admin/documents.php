@@ -7,15 +7,6 @@ require_once '../includes/functions.php';
 // Verificar autenticación y rol de administrador
 requireAdmin();
 
-// Función helper para formatear tamaño de archivo (definida localmente para evitar errores)
-function formatFileSize($bytes) {
-    if ($bytes === 0) return '0 Bytes';
-    $k = 1024;
-    $sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
-    $i = floor(log($bytes) / log($k));
-    return round($bytes / pow($k, $i), 2) . ' ' . $sizes[$i];
-}
-
 // Obtener información del usuario
 $userId = $_SESSION['user_id'];
 $db = Database::getInstance();

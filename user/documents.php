@@ -58,15 +58,6 @@ foreach ($documents as &$doc) {
 $sql = "SELECT DISTINCT YEAR(created_at) as year FROM documents WHERE user_id = ? ORDER BY year DESC";
 $years = $db->fetchAll($sql, [$userId]);
 
-// Función helper para formatear tamaño de archivo
-function formatFileSize($bytes) {
-    if ($bytes === 0) return '0 Bytes';
-    $k = 1024;
-    $sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
-    $i = floor(log($bytes) / log($k));
-    return round($bytes / pow($k, $i), 2) . ' ' . $sizes[$i];
-}
-
 // Set page title for the header
 $pageTitle = "Mis Documentos";
 $userRole = "user";

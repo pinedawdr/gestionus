@@ -106,15 +106,6 @@ foreach ($recentDocuments as &$doc) {
     $doc['created_at_formatted'] = formatDate($doc['created_at']);
 }
 
-// Función helper para formatear tamaño de archivo
-function formatFileSize($bytes) {
-    if ($bytes === 0) return '0 Bytes';
-    $k = 1024;
-    $sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
-    $i = floor(log($bytes) / log($k));
-    return round($bytes / pow($k, $i), 2) . ' ' . $sizes[$i];
-}
-
 // Definir título de la página
 $page_title = "Panel de Administración";
 

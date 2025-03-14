@@ -38,15 +38,6 @@ $sortBy = isset($_GET['sort']) ? sanitize($_GET['sort']) : 'date_desc';
 $sql = "SELECT id, name FROM users WHERE active = 1 AND role = 'user' ORDER BY name";
 $users = $db->fetchAll($sql);
 
-// Helper function para formatear tamaño de archivo
-function formatFileSize($bytes) {
-    if ($bytes === 0) return '0 Bytes';
-    $k = 1024;
-    $sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
-    $i = floor(log($bytes) / log($k));
-    return round($bytes / pow($k, $i), 2) . ' ' . $sizes[$i];
-}
-
 // Nombres de los meses
 $monthNames = [
     '01' => 'Enero', '02' => 'Febrero', '03' => 'Marzo', '04' => 'Abril',
